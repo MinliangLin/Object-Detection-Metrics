@@ -3,7 +3,8 @@ import _init_paths
 from utils import *
 from BoundingBox import BoundingBox
 from BoundingBoxes import BoundingBoxes
-from Evaluator import *
+from Evaluator2 import *
+import numpy as np
 
 import argparse
 import json
@@ -43,8 +44,8 @@ for x in pred['annotations']:
 allClasses = [i['name'] for i in gt['categories']]
 
 # start evaluation
-res = Evaluator().GetPascalVOCMetrics(boxes, IOUThreshold=arg.threshold)
+res = Evaluator().GetPascalVOCMetrics(boxes, IOUThreshold=arg.threshold, method='11pts')
 valid = [i['AP'] for i in res if i['total positives'] > 0]
-print('cls0 TP', res[0]['total TP'])
+ap = res[0]['interpolated precision'][1:-1]
+print('cls0 sap', ap, len(ap), sum(ap), np.mean(ap))
 print('mAP/valid', sum(valid)/len(valid))
-

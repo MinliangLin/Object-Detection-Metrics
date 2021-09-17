@@ -27,7 +27,7 @@ for i, (k,v) in enumerate(data.items()):
                     "image_id": i,
                     "category_id": j,
                     "bbox": [int(round(x)) for x in box[:4]],
-                    "score": box[-1],
+                    "score": float(box[-1]),
                 })
 
 js = {

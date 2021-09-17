@@ -15,7 +15,10 @@ Person
 Human ear
 Tree
 Human hand
-Human beard'''.split('\n')
+Human beard
+Dress
+Girl
+Jellyfish'''.split('\n')
 
 with open(jf) as f:
     js = json.load(f)
