@@ -89,10 +89,11 @@ class Evaluator:
                 if g[1] == c:
                     npos += 1
                     gts[g[0]] = gts.get(g[0], []) + [g]
+            if not npos:
+                continue
 
             # sort detections by decreasing confidence
-            inds = np.argsort([-d[2] for d in dects], kind='mergesort')
-            dects = [dects[i] for i in inds]
+            dects = sorted(dects, key=lambda conf: conf[2], reverse=True)
             TP = np.zeros(len(dects))
             FP = np.zeros(len(dects))
             # create dictionary with amount of gts for each image
@@ -131,10 +132,18 @@ class Evaluator:
             prec = np.divide(acc_TP, (acc_FP + acc_TP))
             # Depending on the method, call the right implementation
             if method == MethodAveragePrecision.EveryPointInterpolation:
-                [ap, mpre, mrec, ii] = Evaluator.CalculateAveragePrecision(rec, prec)
+                [ap, mpre, mrec, _] = Evaluator.CalculateAveragePrecision(rec, prec)
             else:
                 [ap, mpre, mrec, _] = Evaluator.ElevenPointInterpolatedAP(rec, prec)
             # add class result in the dictionary to be returned
+            if c == 8:
+                print('debug mprec', np.array(mpre[-2:0:-1]))
+                print('debug mrec', np.array(mrec[-2:0:-1]))
+                print('debug pre', prec)#mpre)
+                print('debug rec', rec)#mrec)
+                print('debug TP', acc_TP)
+                print('debug FP', acc_FP)
+                print('P^', len(dects))
             r = {
                 'class': c,
                 'precision': prec,
@@ -316,7 +325,7 @@ class Evaluator:
 
     @staticmethod
     # 11-point interpolated average precision
-    def ElevenPointInterpolatedAP(rec, prec):
+    def ElevenPointInterpolatedAP(rec, prec, n=101):
         # def CalculateAveragePrecision2(rec, prec):
         mrec = []
         # mrec.append(0)
@@ -326,7 +335,7 @@ class Evaluator:
         # mpre.append(0)
         [mpre.append(e) for e in prec]
         # mpre.append(0)
-        recallValues = np.linspace(0, 1, 11)
+        recallValues = np.linspace(0, 1, n)
         recallValues = list(recallValues[::-1])
         rhoInterp = []
         recallValid = []
@@ -341,7 +350,7 @@ class Evaluator:
             recallValid.append(r)
             rhoInterp.append(pmax)
         # By definition AP = sum(max(precision whose recall is above r))/11
-        ap = sum(rhoInterp) / 11
+        ap = np.mean(rhoInterp)
         # Generating values for the plot
         rvals = []
         rvals.append(recallValid[0])

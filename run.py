@@ -3,7 +3,6 @@ import _init_paths
 from utils import *
 from BoundingBox import BoundingBox
 from BoundingBoxes import BoundingBoxes
-from Evaluator import *
 
 import argparse
 import json
@@ -12,13 +11,13 @@ ps = argparse.ArgumentParser()
 ps.add_argument("pred")
 ps.add_argument("gt")
 ps.add_argument("-t", "--threshold", type=float, default=0.5)
-# arg = ps.parse_args(['../make-sense/face-coco.json','../make-sense/face-coco_new.json'])
-arg = ps.parse_args()
+ps.add_argument("-c", "--simulate_coco", action="store_true")
+args = ps.parse_args()
 
-with open(arg.pred) as f:
+with open(args.pred) as f:
     pred = json.load(f)
 
-with open(arg.gt) as f:
+with open(args.gt) as f:
     gt = json.load(f)
 
 # all boxes
@@ -41,10 +40,19 @@ for x in pred['annotations']:
     ))
 
 allClasses = [i['name'] for i in gt['categories']]
+print('pred len', len(pred['annotations']))
 
 # start evaluation
-res = Evaluator().GetPascalVOCMetrics(boxes, IOUThreshold=arg.threshold)
-valid = [i['AP'] for i in res if i['total positives'] > 0]
-print('cls0 TP', res[0]['total TP'])
-print('mAP/valid', sum(valid)/len(valid))
+if args.simulate_coco:
+    from Evaluator2 import *
+    res = Evaluator().GetPascalVOCMetrics(boxes, IOUThreshold=args.threshold, method='101pts')
+    # print('debug', [(i['class'], i['total TP']) for i in res if i['total positives'] > 0])
+else:
+    from Evaluator import *
+    res = Evaluator().GetPascalVOCMetrics(boxes, IOUThreshold=args.threshold)
 
+print('mAP (P>0):', np.mean([i['AP'] for i in res if i['total positives'] > 0]))
+print([(i['class'], i['total positives'], i['total TP'], i['AP']) for i in res[:30]])
+# print('cls0 TP', res[0]['total TP'])
+# ap = res[0]['interpolated precision'][1:-1]
+# print('cls0 sap', ap, len(ap), sum(ap), np,mean(ap))
