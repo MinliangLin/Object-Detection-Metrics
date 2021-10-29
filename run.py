@@ -53,6 +53,16 @@ else:
 
 print('mAP (P>0):', np.mean([i['AP'] for i in res if i['total positives'] > 0]))
 print([(i['class'], i['total positives'], i['total TP'], i['AP']) for i in res[:30]])
-# print('cls0 TP', res[0]['total TP'])
-# ap = res[0]['interpolated precision'][1:-1]
-# print('cls0 sap', ap, len(ap), sum(ap), np,mean(ap))
+
+import pandas as pd
+import numpy as np
+id_to_cls = {c['id']:c['name'] for c in gt['categories']}
+a = pd.DataFrame([(
+    r['class'],
+    id_to_cls[r['class']],
+    r['total positives'],
+    r['AP'],
+    np.quantile(r['recall'], [0.25, 0.5, 0.75]) if len(r['recall']) > 0 else [],
+    np.quantile(r['precision'], [0.25, 0.5, 0.75]) if len(r['recall']) > 0 else []) for r in res])
+a.columns = ['id', 'name', 'P', 'AP', 'recall', 'precision']
+a.to_csv('evaluation_result.csv')

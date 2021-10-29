@@ -7,7 +7,7 @@ with open(jf) as f:
     js = json.load(f)
 
 for i, x in enumerate(js['annotations']):
-    x['id'] = i
+    x['id'] = i+1
 
 with open(njf, 'w') as f:
     json.dump(js, f)

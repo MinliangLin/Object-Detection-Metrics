@@ -11,6 +11,7 @@ arg = ps.parse_args()
 
 gt = COCO(arg.gt)
 pred = COCO(arg.pred)
+
 for x in gt.dataset['annotations']:
     x.setdefault('iscrowd', 0)
     x.setdefault('area', x['bbox'][2]*x['bbox'][3])
