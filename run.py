@@ -12,6 +12,7 @@ ps.add_argument("pred")
 ps.add_argument("gt")
 ps.add_argument("-t", "--threshold", type=float, default=0.5)
 ps.add_argument("-c", "--simulate_coco", action="store_true")
+ps.add_argument("-m", "--remove_empty", action="store_true")
 args = ps.parse_args()
 
 with open(args.pred) as f:
@@ -52,7 +53,6 @@ else:
     res = Evaluator().GetPascalVOCMetrics(boxes, IOUThreshold=args.threshold)
 
 print('mAP (P>0):', np.mean([i['AP'] for i in res if i['total positives'] > 0]))
-print([(i['class'], i['total positives'], i['total TP'], i['AP']) for i in res[:30]])
 
 import pandas as pd
 import numpy as np
@@ -62,7 +62,8 @@ a = pd.DataFrame([(
     id_to_cls[r['class']],
     r['total positives'],
     r['AP'],
-    np.quantile(r['recall'], [0.25, 0.5, 0.75]) if len(r['recall']) > 0 else [],
-    np.quantile(r['precision'], [0.25, 0.5, 0.75]) if len(r['recall']) > 0 else []) for r in res])
-a.columns = ['id', 'name', 'P', 'AP', 'recall', 'precision']
+    np.quantile(r['recall'], [0.1, 0.25, 0.5, 0.75, 0.9]) if len(r['recall']) > 0 else [],
+    np.quantile(r['precision'], [0.1, 0.25, 0.5, 0.75, 0.9]) if len(r['recall']) > 0 else []) for r in res])
+a.columns = ['id', 'name', 'P', 'AP', 'recall(0.1-0.9)', 'precision(0.1-0.9)']
+a = a.dropna()[a['AP']>1e-6]
 a.to_csv('evaluation_result.csv')
